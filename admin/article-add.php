@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch existing assets for quick selection
-$availableImages = glob(__DIR__ . '/../../assets/images/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
+$availableImages = glob(__DIR__ . '/../assets/images/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
 ?>
 
 <div class="card" style="max-width: 900px; margin: 0 auto;">

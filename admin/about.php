@@ -4,11 +4,13 @@
  * Manage Behind-the-Scenes Video, Vision texts, and Editorial Contributors
  */
 
-require_once __DIR__ . '/../../config/auth.php';
-require_once __DIR__ . '/../../config/db.php';
-require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 require_admin();
+
+$pdo = get_db_connection();
 
 $adminPageTitle = 'About Us & Contributors Editor';
 $adminActiveTab = 'about';
@@ -111,8 +113,8 @@ $contributors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $commonBatches = ['UG 1', 'UG 2', 'UG 3', 'UG 4', 'PG 1', 'PG 2', 'Faculty', 'Alumni', 'Passed out 2026'];
 
 // Available Images for Avatars
-$availableImages = glob(__DIR__ . '/../../assets/images/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
-$contributorImages = glob(__DIR__ . '/../../assets/images/contributors/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
+$availableImages = glob(__DIR__ . '/../assets/images/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
+$contributorImages = glob(__DIR__ . '/../assets/images/contributors/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
 $allImages = array_merge($contributorImages, $availableImages);
 
 require_once __DIR__ . '/includes/admin_header.php';
@@ -228,7 +230,7 @@ require_once __DIR__ . '/includes/admin_header.php';
                 <div class="contributor-handle">☰</div>
                 
                 <div class="contributor-avatar-small">
-                  <?php if (!empty($c['avatar_path']) && file_exists(__DIR__ . '/../../' . $c['avatar_path'])): ?>
+                  <?php if (!empty($c['avatar_path']) && file_exists(__DIR__ . '/../' . $c['avatar_path'])): ?>
                     <img src="../<?= e($c['avatar_path']) ?>" alt="<?= e($c['name']) ?>">
                   <?php else: ?>
                     <div class="avatar-letter"><?= strtoupper(mb_substr($c['name'], 0, 1, 'UTF-8')) ?></div>
@@ -325,7 +327,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             <select id="existing_avatar" name="existing_avatar" class="form-control">
               <option value="">-- None / Keep current avatar --</option>
               <?php foreach ($allImages as $imgPath): 
-                $relPath = str_replace(__DIR__ . '/../../', '', str_replace('\\', '/', $imgPath));
+                $relPath = str_replace(__DIR__ . '/../', '', str_replace('\\', '/', $imgPath));
               ?>
                 <option value="<?= e($relPath) ?>"><?= e(basename($relPath)) ?></option>
               <?php endforeach; ?>

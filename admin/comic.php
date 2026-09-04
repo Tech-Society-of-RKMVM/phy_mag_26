@@ -4,11 +4,13 @@
  * Manage comic panels, drag-and-drop reordering, and prologue/epilogue texts
  */
 
-require_once __DIR__ . '/../../config/auth.php';
-require_once __DIR__ . '/../../config/db.php';
-require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 require_admin();
+
+$pdo = get_db_connection();
 
 $adminPageTitle = 'Comic Book Editor';
 $adminActiveTab = 'comic';
@@ -74,8 +76,8 @@ $panelsStmt = $pdo->query("SELECT id, title, image_path, sort_order, created_at 
 $panels = $panelsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch existing assets for quick selection
-$availableImages = glob(__DIR__ . '/../../assets/images/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
-$comicImages = glob(__DIR__ . '/../../assets/images/comic/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
+$availableImages = glob(__DIR__ . '/../assets/images/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
+$comicImages = glob(__DIR__ . '/../assets/images/comic/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
 $allImages = array_merge($comicImages, $availableImages);
 
 // Fetch settings
@@ -240,7 +242,7 @@ require_once __DIR__ . '/includes/admin_header.php';
             <select id="existing_asset" name="existing_asset" class="form-control">
               <option value="">-- Select from assets library --</option>
               <?php foreach ($allImages as $imgPath): 
-                $relPath = str_replace(__DIR__ . '/../../', '', str_replace('\\', '/', $imgPath));
+                $relPath = str_replace(__DIR__ . '/../', '', str_replace('\\', '/', $imgPath));
               ?>
                 <option value="<?= e($relPath) ?>"><?= e(basename($relPath)) ?></option>
               <?php endforeach; ?>

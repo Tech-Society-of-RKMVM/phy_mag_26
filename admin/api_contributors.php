@@ -4,9 +4,11 @@
  * Handles reordering, deletions, and updates via AJAX
  */
 
-require_once __DIR__ . '/../../config/auth.php';
-require_once __DIR__ . '/../../config/db.php';
-require_once __DIR__ . '/../../includes/functions.php';
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+$pdo = get_db_connection();
 
 header('Content-Type: application/json');
 
