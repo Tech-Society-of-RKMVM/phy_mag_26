@@ -7,6 +7,8 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
+$pdo = get_db_connection();
+
 // Fetch dynamic site settings
 $heroTitle = get_setting('about_hero_title', 'About Our Wall Magazine');
 $heroSubtitle = get_setting('about_hero_subtitle', 'The Department of Physics Wall Magazine at Ramakrishna Mission Vidyamandira is a creative and intellectual platform for undergraduate and postgraduate students.');

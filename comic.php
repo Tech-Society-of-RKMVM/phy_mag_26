@@ -7,10 +7,12 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 
+$pdo = get_db_connection();
+
 // Fetch Comic Settings
-$comicTitle = get_setting($pdo, 'comic_title', 'Department Of Physics Comic');
-$comicTopText = get_setting($pdo, 'comic_top_text', '');
-$comicBottomText = get_setting($pdo, 'comic_bottom_text', '');
+$comicTitle = get_setting('comic_title', 'Department Of Physics Comic');
+$comicTopText = get_setting('comic_top_text', '');
+$comicBottomText = get_setting('comic_bottom_text', '');
 
 // Fetch Panels
 $stmt = $pdo->query("SELECT id, title, image_path, sort_order FROM comic_panels ORDER BY sort_order ASC, id ASC");
