@@ -80,18 +80,25 @@ echo "  - Gracefully reloading Apache HTTP server..."
 run_sudo systemctl reload apache2
 
 # 6. Service Health Check
-echo "[6/6] Running health check..."
+echo "[6/6] Running health checks..."
 PORT="8080"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/" || echo "000")
+LOCAL_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/" || echo "000")
+DOMAIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: physics.magazine.rkmvmfamily.in" "http://127.0.0.1/" || echo "000")
 
-if [ "${HTTP_CODE}" == "200" ] || [ "${HTTP_CODE}" == "302" ]; then
-    echo -e "  \e[32m✓ Health check PASSED (HTTP ${HTTP_CODE})\e[0m"
+if [ "${LOCAL_CODE}" == "200" ] || [ "${LOCAL_CODE}" == "302" ]; then
+    echo -e "  \e[32m✓ Local port ${PORT} check PASSED (HTTP ${LOCAL_CODE})\e[0m"
 else
-    echo -e "  \e[33m! Warning: Health check returned HTTP ${HTTP_CODE} on port ${PORT}\e[0m"
+    echo -e "  \e[33m! Local port ${PORT} returned HTTP ${LOCAL_CODE}\e[0m"
+fi
+
+if [ "${DOMAIN_CODE}" == "200" ] || [ "${DOMAIN_CODE}" == "301" ] || [ "${DOMAIN_CODE}" == "302" ]; then
+    echo -e "  \e[32m✓ VirtualHost physics.magazine.rkmvmfamily.in PASSED (HTTP ${DOMAIN_CODE})\e[0m"
 fi
 
 echo "========================================================"
 echo -e "\e[32m Deployment Succeeded!\e[0m"
-echo " Live URL (Local): http://localhost:${PORT}/"
-echo " Admin Portal:     http://localhost:${PORT}/admin/"
+echo " Live Domain:      https://physics.magazine.rkmvmfamily.in/"
+echo " Admin Portal:     https://physics.magazine.rkmvmfamily.in/admin/"
+echo " Local Fallback:   http://localhost:${PORT}/"
 echo "========================================================"
+

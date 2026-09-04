@@ -6,15 +6,16 @@ This document outlines the operational commands, service management, database ma
 
 ## 1. Hosting Architecture & URLs
 
+- **Primary Subdomain:** `https://physics.magazine.rkmvmfamily.in/`
 - **Web Server:** Apache 2.4 (PHP 8.3 Module)
-- **Port:** `8080` (Configured independently alongside other virtual hosts)
 - **DocumentRoot:** `/var/www/phy_mag_26`
-- **Apache Site Config:** `/etc/apache2/sites-available/phy_mag_26.conf`
-- **Apache Port Config:** `/etc/apache2/conf-available/phy_mag_ports.conf`
+- **Apache VirtualHost:** `/etc/apache2/sites-available/physics.magazine.rkmvmfamily.in.conf`
+- **Local Fallback Port:** `8080` (`/etc/apache2/sites-available/phy_mag_26.conf`)
 
 ### Access Endpoints
-- **Public Portal:** [http://localhost:8080/](http://localhost:8080/)
-- **Admin Portal:** [http://localhost:8080/admin/](http://localhost:8080/admin/)
+- **Production URL:** [https://physics.magazine.rkmvmfamily.in/](https://physics.magazine.rkmvmfamily.in/)
+- **Production Admin:** [https://physics.magazine.rkmvmfamily.in/admin/](https://physics.magazine.rkmvmfamily.in/admin/)
+- **Local Port Fallback:** [http://localhost:8080/](http://localhost:8080/)
 - **Default Admin Username:** `admin`
 - **Default Admin Password:** `admin123`
 
@@ -94,8 +95,25 @@ DB_NAME=phy_mag_db
 
 ---
 
-## 5. Apache Configuration Reference
-
-For reference, the Apache configuration files are also tracked in `scripts/apache/`:
+## 5. Apache Configuration Reference & Subdomain Setup
+ 
+For reference, Apache configuration templates are tracked in `scripts/apache/`:
+- `scripts/apache/physics.magazine.rkmvmfamily.in.conf`: Subdomain VirtualHost (`*:80` and ready for Certbot SSL)
 - `scripts/apache/phy_mag_ports.conf`: Declares `Listen 8080`
-- `scripts/apache/phy_mag_26.conf`: Declares `<VirtualHost *:8080>` with `AllowOverride All` for clean URL routing and header policies.
+- `scripts/apache/phy_mag_26.conf`: Declares `<VirtualHost *:8080>` as local fallback
+ 
+### Activating the Subdomain
+Run the automated script with sudo:
+```bash
+sudo ./scripts/setup_subdomain.sh
+```
+Or manually:
+```bash
+sudo cp scripts/apache/physics.magazine.rkmvmfamily.in.conf /etc/apache2/sites-available/
+sudo a2ensite physics.magazine.rkmvmfamily.in.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+
+# Acquire Let's Encrypt SSL certificate (after DNS 'A' record is added)
+sudo certbot --apache -d physics.magazine.rkmvmfamily.in
+```
