@@ -12,6 +12,10 @@ body {
   line-height: 1.6;
 }
 
+body.has-bg-scroller {
+  background: transparent;
+}
+
 /* Header */
 header {
   text-align: center;
@@ -49,23 +53,29 @@ header h1 {
 
 /* Header specific for article pages */
 header.article-header {
-  background: #fff6e5;
-  color: #2e2e2e;
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+  text-align: center;
+  padding: 2.2rem 1rem;
+  color: white;
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), 
+    url('../images/1000089462.jpg');
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid #ddd;
 }
 
 header.article-header img.logo {
   height: 80px;
   border-radius: 6px;
   margin-bottom: 0.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 header.article-header h1 {
   font-size: 1.8rem;
-  color: #2e2e2e;
+  color: white;
   margin: 0.5rem 0 1rem;
-  text-shadow: none;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
 }
 
 /* Navigation */
@@ -110,7 +120,7 @@ nav a.active {
   border-top: 4px solid black;
   border-bottom: 4px solid black;
   max-width: 2000px;
-  margin: 2rem auto;
+  margin: 0 auto 2rem;
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
@@ -661,6 +671,89 @@ footer {
     width: 100%;
     display: flex;
     justify-content: center;
-  }
+}
+
+/* ============================================================
+   FULL-BODY BACKGROUND SCROLLER & ATMOSPHERIC OVERLAYS
+   ============================================================ */
+.bg-scroller,
+.bg-overlay {
+  pointer-events: none;
+  user-select: none;
+}
+
+.bg-scroller {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -3;
+  overflow: hidden;
+}
+
+.bg-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.8s ease-in-out;
+  filter: brightness(0.65) saturate(0.9);
+}
+
+.bg-slide.active {
+  opacity: 1;
+}
+
+.bg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+}
+
+.bg-overlay-warm_amber {
+  background: linear-gradient(
+    to bottom,
+    rgba(24, 18, 12, 0.30) 0%,
+    rgba(38, 26, 15, 0.45) 45%,
+    rgba(255, 248, 238, 0.65) 85%,
+    rgba(255, 248, 238, 0.85) 100%
+  );
+}
+
+.bg-overlay-dark_atmospheric {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 15, 25, 0.45) 0%,
+    rgba(10, 15, 25, 0.60) 45%,
+    rgba(15, 23, 42, 0.78) 85%,
+    rgba(15, 23, 42, 0.92) 100%
+  );
+}
+
+.bg-overlay-deep_teal {
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 35, 40, 0.35) 0%,
+    rgba(20, 50, 55, 0.50) 45%,
+    rgba(240, 248, 250, 0.65) 85%,
+    rgba(240, 248, 250, 0.85) 100%
+  );
+}
+
+.bg-overlay-glass_minimal {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.20) 0%,
+    rgba(255, 255, 255, 0.45) 55%,
+    rgba(255, 255, 255, 0.75) 100%
+  );
 }
 

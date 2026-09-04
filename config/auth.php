@@ -40,3 +40,10 @@ function get_csrf_token() {
 function validate_csrf_token($token) {
     return !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
+
+/**
+ * Alias for validate_csrf_token() — used across admin pages.
+ */
+function verify_csrf_token($token) {
+    return validate_csrf_token($token);
+}

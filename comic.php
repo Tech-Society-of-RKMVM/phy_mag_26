@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/includes/functions.php';
 
 $pdo = get_db_connection();
@@ -45,9 +46,7 @@ require_once __DIR__ . '/includes/header.php';
       <div class="empty-icon">🎨</div>
       <h3>Comic Under Production</h3>
       <p>The comic panels are currently being prepared by our department artists. Please check back shortly!</p>
-      <?php if (is_admin_logged_in()): ?>
-        <a href="admin/comic.php" class="btn-comic-action">Go to Admin Comic Editor &rarr;</a>
-      <?php endif; ?>
+
     </div>
   <?php else: ?>
     <!-- Sequential Comic Panels (One per row) -->

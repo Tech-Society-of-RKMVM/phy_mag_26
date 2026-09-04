@@ -67,7 +67,8 @@ function set_setting($key, $value)
  */
 function get_embed_video_url($url)
 {
-    if (empty($url)) return '';
+    if (empty($url))
+        return '';
 
     // YouTube standard watch URL: https://www.youtube.com/watch?v=VIDEO_ID
     if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i', $url, $matches)) {
@@ -112,7 +113,7 @@ function handle_image_upload($fileInputName, $subDir = '')
     $subDirClean = trim($subDir, '/\\');
     $relDir = 'assets/images/' . ($subDirClean ? $subDirClean . '/' : '');
     $targetDir = __DIR__ . '/../' . $relDir;
-    
+
     if (!is_dir($targetDir)) {
         mkdir($targetDir, 0777, true);
     }
@@ -124,10 +125,10 @@ function handle_image_upload($fileInputName, $subDir = '')
     if (empty($cleanBase)) {
         $cleanBase = 'img_' . time();
     }
-    
+
     $filename = $cleanBase . '.' . strtolower($ext);
     $targetPath = $targetDir . $filename;
-    
+
     // If file already exists with same name, append timestamp
     if (file_exists($targetPath)) {
         $filename = $cleanBase . '_' . time() . '.' . strtolower($ext);
@@ -140,3 +141,120 @@ function handle_image_upload($fileInputName, $subDir = '')
         return ['success' => false, 'path' => '', 'error' => 'Failed to save image to ' . $relDir];
     }
 }
+
+/**
+ * Get background system configuration settings
+ */
+function get_background_config()
+{
+    $enabled = (int)get_setting('bg_enabled', '1');
+    $style = get_setting('bg_overlay_style', 'warm_amber');
+    $brightness = (float)get_setting('bg_brightness', '0.65');
+    $blur = (int)get_setting('bg_blur', '0');
+    $speed = (int)get_setting('bg_transition_speed', '7');
+
+    return [
+        'enabled' => $enabled === 1,
+        'overlay_style' => $style ?: 'warm_amber',
+        'brightness' => $brightness > 0 ? $brightness : 0.65,
+        'blur' => max(0, $blur),
+        'transition_speed' => max(3, $speed)
+    ];
+}
+
+/**
+ * Fetch all active background images for rotation
+ */
+function get_active_backgrounds()
+{
+    try {
+        $pdo = get_db_connection();
+        $stmt = $pdo->query("SELECT id, image_path, title FROM background_images WHERE is_active = 1 ORDER BY sort_order ASC, id ASC");
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // If table is empty, provide default fallback
+        if (empty($results)) {
+            $defaultImgs = ['assets/images/1000089462.jpg', 'assets/images/dept.jpg', 'assets/images/dept2.jpg'];
+            foreach ($defaultImgs as $img) {
+                if (file_exists(__DIR__ . '/../' . $img)) {
+                    $results[] = ['id' => 0, 'image_path' => $img, 'title' => 'Default Department View'];
+                }
+            }
+        }
+        return $results;
+    } catch (Exception $e) {
+        return [];
+    }
+}
+
+/**
+ * Compute custom CSS inline style for homepage <main> articles container
+ */
+function get_index_main_style()
+{
+    $type = get_setting('index_main_bg_type', 'transparent');
+    if ($type === 'transparent') {
+        return '';
+    }
+
+    $styles = [];
+    $radius = (int)get_setting('index_main_bg_radius', '16');
+    $padding = (int)get_setting('index_main_bg_padding', '2');
+    $hasBorder = get_setting('index_main_bg_border', '1') === '1';
+    $hasShadow = get_setting('index_main_bg_shadow', '1') === '1';
+
+    $styles[] = "border-radius: {$radius}px";
+    $styles[] = "padding: {$padding}rem";
+
+    if ($hasShadow) {
+        $styles[] = "box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04)";
+    }
+
+    if ($type === 'frosted_glass') {
+        $color = get_setting('index_main_bg_color', 'rgba(255, 255, 255, 0.85)');
+        $blur = (int)get_setting('index_main_bg_blur', '14');
+        $styles[] = "background: {$color}";
+        $styles[] = "backdrop-filter: blur({$blur}px)";
+        $styles[] = "-webkit-backdrop-filter: blur({$blur}px)";
+        if ($hasBorder) {
+            $styles[] = "border: 1px solid rgba(255, 255, 255, 0.65)";
+        }
+    } elseif ($type === 'custom_image') {
+        $img = get_setting('index_main_bg_image', '');
+        $overlayColor = get_setting('index_main_bg_color', 'rgba(255, 248, 238, 0.85)');
+        if (!empty($img)) {
+            $styles[] = "background-image: linear-gradient({$overlayColor}, {$overlayColor}), url('{$img}')";
+            $styles[] = "background-size: cover";
+            $styles[] = "background-position: center";
+        } else {
+            $styles[] = "background: {$overlayColor}";
+        }
+        $blur = (int)get_setting('index_main_bg_blur', '0');
+        if ($blur > 0) {
+            $styles[] = "backdrop-filter: blur({$blur}px)";
+            $styles[] = "-webkit-backdrop-filter: blur({$blur}px)";
+        }
+        if ($hasBorder) {
+            $styles[] = "border: 1px solid rgba(255, 255, 255, 0.5)";
+        }
+    } elseif ($type === 'solid_color') {
+        $color = get_setting('index_main_bg_color', '#ffffff');
+        $styles[] = "background: {$color}";
+        if ($hasBorder) {
+            $styles[] = "border: 1px solid rgba(0, 0, 0, 0.08)";
+        }
+    } elseif ($type === 'chalkboard_dark') {
+        $styles[] = "background: rgba(15, 23, 42, 0.90)";
+        $styles[] = "backdrop-filter: blur(14px)";
+        $styles[] = "-webkit-backdrop-filter: blur(14px)";
+        if ($hasBorder) {
+            $styles[] = "border: 1px solid rgba(255, 255, 255, 0.15)";
+        }
+        if ($hasShadow) {
+            $styles[] = "box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25)";
+        }
+    }
+
+    return implode('; ', $styles) . ';';
+}
+
