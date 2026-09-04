@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch existing assets for quick selection
 $availableImages = glob(__DIR__ . '/../../assets/images/*.{jpg,jpeg,png,webp}', GLOB_BRACE);
 
-$commonBatches = ['UG 1', 'UG 2', 'UG 3', 'PG 1', 'PG 2', 'Faculty', 'Alumni'];
+$commonBatches = ['UG 1', 'UG 2', 'UG 3', 'UG 4', 'PG 1', 'PG 2', 'Faculty', 'Alumni'];
 $isCustomBatch = !in_array($article['author_batch'], $commonBatches) && !empty($article['author_batch']);
 ?>
 

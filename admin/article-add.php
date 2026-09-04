@@ -136,6 +136,7 @@ $availableImages = glob(__DIR__ . '/../../assets/images/*.{jpg,jpeg,png,webp}', 
             <option value="UG 1">UG 1</option>
             <option value="UG 2" selected>UG 2</option>
             <option value="UG 3">UG 3</option>
+            <option value="UG 4">UG 4</option>
             <option value="PG 1">PG 1</option>
             <option value="PG 2">PG 2</option>
             <option value="Faculty">Faculty</option>
