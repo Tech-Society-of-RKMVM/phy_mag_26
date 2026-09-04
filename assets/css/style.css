@@ -295,27 +295,26 @@ footer {
   border-top: 1px solid #ddd;
 }
 
-/* ----- COMIC & BOOK READER STYLES ----- */
+/* ----- COMIC & GRAPHIC NOVEL STYLES ----- */
 .comic-main-container,
 .about-main-container {
-  max-width: 1100px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2.5rem 1.25rem;
 }
 
-.comic-prologue-box,
-.comic-epilogue-box {
-  background: #fffdf8;
-  border: 1px solid #f1e4c3;
+.comic-text-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-left: 4px solid #d4af37;
-  border-radius: 8px;
-  padding: 1.5rem 2rem;
-  margin: 1.5rem 0 2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border-radius: 10px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .comic-text-content {
-  color: #3f3f46;
+  color: #334155;
   font-size: 1.05rem;
   line-height: 1.8;
 }
@@ -369,351 +368,64 @@ footer {
   background: #0f172a;
 }
 
-/* Comic App Wrapper */
-#comic-reader-app {
-  background: #18181b;
-  border-radius: 14px;
-  padding: 1.25rem;
-  box-shadow: 0 10px 35px rgba(0,0,0,0.35);
-  color: #f4f4f5;
-  margin: 1.5rem 0 2.5rem;
-}
-
-/* Top Toolbar */
-.comic-toolbar {
+/* Sequential Comic Stream Layout (One image per row) */
+.comic-stream {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #27272a;
-  margin-bottom: 1.25rem;
+  flex-direction: column;
+  gap: 2.75rem;
+  width: 100%;
 }
 
-.toolbar-left {
+.comic-panel-row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.comic-panel-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.toolbar-title {
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: #fafafa;
-}
-
-.page-badge {
-  background: #27272a;
-  color: #e4e4e7;
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 20px;
-  border: 1px solid #3f3f46;
-}
-
-.mode-toggle-group {
-  display: inline-flex;
-  background: #27272a;
-  border-radius: 8px;
-  padding: 3px;
-}
-
-.mode-btn {
-  background: transparent;
-  border: none;
-  color: #a1a1aa;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.mode-btn.active {
-  background: #3b82f6;
+.comic-panel-num {
+  background: #1e293b;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(59,130,246,0.4);
-}
-
-.tool-icon-btn {
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  color: #f4f4f5;
-  padding: 0.4rem 0.85rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: background 0.2s;
-}
-
-.tool-icon-btn:hover {
-  background: #3f3f46;
-}
-
-/* Book Viewport Area */
-.comic-viewport-wrapper {
-  position: relative;
-  background: #09090b;
-  border-radius: 10px;
-  overflow: hidden;
-  min-height: 520px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
-}
-
-.book-perspective-area {
-  position: relative;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem 3.5rem;
-  perspective: 2200px;
-}
-
-.book-nav-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(39, 39, 42, 0.85);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: white;
-  font-size: 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 20;
-  transition: all 0.2s;
-}
-
-.book-nav-arrow:hover:not(:disabled) {
-  background: #3b82f6;
-  transform: translateY(-50%) scale(1.1);
-}
-
-.book-nav-arrow.arrow-left {
-  left: 1rem;
-}
-
-.book-nav-arrow.arrow-right {
-  right: 1rem;
-}
-
-/* Book Stage Layout */
-.book-3d-stage {
-  max-width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.book-single-page {
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  overflow: hidden;
-  max-width: 580px;
-}
-
-.book-single-page .page-inner img {
-  display: block;
-  max-width: 100%;
-  max-height: 680px;
-  width: auto;
-  margin: 0 auto;
-  object-fit: contain;
-}
-
-.book-spread {
-  display: flex;
-  align-items: stretch;
-  background: #121214;
-  border-radius: 6px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.7);
-  overflow: hidden;
-}
-
-.book-page {
-  flex: 1;
-  background: #ffffff;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  max-width: 480px;
-}
-
-.book-page-left {
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
-  box-shadow: inset -15px 0 20px -10px rgba(0,0,0,0.18);
-}
-
-.book-page-right {
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
-  box-shadow: inset 15px 0 20px -10px rgba(0,0,0,0.18);
-}
-
-.book-spine {
-  width: 12px;
-  background: linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.35));
-  position: relative;
-  z-index: 10;
-}
-
-.page-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-}
-
-.page-inner img {
-  display: block;
-  max-width: 100%;
-  max-height: 640px;
-  object-fit: contain;
-  margin: 0 auto;
-}
-
-.page-inner.blank-page {
-  min-height: 450px;
-  background: #fafafa;
-}
-
-.page-number-footer {
-  font-size: 0.75rem;
-  color: #71717a;
-  text-align: center;
-  padding: 0.35rem 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.75rem;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
   font-family: sans-serif;
-  font-weight: 600;
 }
 
-/* Continuous Scroll Mode */
-.comic-scroll-container {
+.comic-panel-title {
+  font-size: 1.15rem;
+  color: #1e293b;
+  font-weight: 600;
+  margin: 0;
+}
+
+.comic-image-card {
   width: 100%;
-  max-width: 800px;
-  padding: 2rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.scroll-panel-item {
-  background: #18181b;
-  border-radius: 8px;
+  background: #ffffff;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-  border: 1px solid #27272a;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.scroll-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 1rem;
-  background: #27272a;
-  font-size: 0.85rem;
-  color: #e4e4e7;
+.comic-image-card:hover {
+  box-shadow: 0 12px 35px rgba(0,0,0,0.11);
 }
 
-.scroll-panel-badge {
-  font-weight: 600;
-}
-
-.scroll-panel-img-wrap img {
-  display: block;
+.comic-image-card img {
   width: 100%;
   height: auto;
-}
-
-/* Scrubber & Thumbnails */
-.comic-scrubber-bar {
-  padding: 0.75rem 0.5rem 0.25rem;
-}
-
-.comic-scrubber-bar input[type="range"] {
-  width: 100%;
-  accent-color: #3b82f6;
-  cursor: pointer;
-}
-
-.comic-thumb-drawer {
-  overflow-x: auto;
-  padding: 0.75rem 0;
-  scrollbar-width: thin;
-}
-
-.comic-thumb-strip {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.comic-thumb {
-  flex: 0 0 65px;
-  cursor: pointer;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  transition: all 0.2s;
-  background: #27272a;
-  text-align: center;
-}
-
-.comic-thumb img {
-  width: 100%;
-  height: 80px;
-  object-fit: cover;
   display: block;
-}
-
-.comic-thumb span {
-  display: block;
-  font-size: 0.7rem;
-  padding: 2px 0;
-  color: #a1a1aa;
-}
-
-.comic-thumb.active {
-  border-color: #3b82f6;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(59,130,246,0.5);
-}
-
-.comic-thumb.active span {
-  background: #3b82f6;
-  color: #ffffff;
-  font-weight: bold;
-}
-
-.comic-nav-hint {
-  text-align: center;
-  font-size: 0.8rem;
-  color: #a1a1aa;
-  margin-top: 0.5rem;
-}
-
-.comic-nav-hint kbd {
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #fff;
+  object-fit: contain;
 }
 
 /* ----- ABOUT US, BTS VIDEO & CONTRIBUTORS STYLES ----- */
