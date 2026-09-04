@@ -56,6 +56,16 @@ $adminName = $_SESSION['admin_name'] ?? 'Admin';
       </a>
     </li>
     <li>
+      <a href="comic.php" class="<?= $adminActiveTab === 'comic' ? 'active' : '' ?>">
+        🎨 Comic Editor
+      </a>
+    </li>
+    <li>
+      <a href="about.php" class="<?= $adminActiveTab === 'about' ? 'active' : '' ?>">
+        ℹ️ About Us & Video
+      </a>
+    </li>
+    <li>
       <a href="article-add.php" class="<?= $adminActiveTab === 'article-add' ? 'active' : '' ?>">
         ➕ Add New Article
       </a>

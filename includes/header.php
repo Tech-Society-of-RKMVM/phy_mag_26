@@ -27,7 +27,7 @@ $isArticleHeader = !empty($isArticlePage);
   <nav>
     <ul>
       <li><a class="<?= $activePage === 'this_year' ? 'active' : '' ?>" href="index.php">This Year</a></li>
-      <li><a class="<?= $activePage === 'previous' ? 'active' : '' ?>" href="previous.php">Previous Year</a></li>
+      <li><a class="<?= $activePage === 'comic' ? 'active' : '' ?>" href="comic.php">Comic</a></li>
       <li><a class="<?= $activePage === 'about' ? 'active' : '' ?>" href="about.php">About Us</a></li>
     </ul>
   </nav>
@@ -41,7 +41,7 @@ $isArticleHeader = !empty($isArticlePage);
   <nav>
     <ul>
       <li><a class="<?= $activePage === 'this_year' ? 'active' : '' ?>" href="index.php">This Year</a></li>
-      <li><a class="<?= $activePage === 'previous' ? 'active' : '' ?>" href="previous.php">Previous Year</a></li>
+      <li><a class="<?= $activePage === 'comic' ? 'active' : '' ?>" href="comic.php">Comic</a></li>
       <li><a class="<?= $activePage === 'about' ? 'active' : '' ?>" href="about.php">About Us</a></li>
     </ul>
   </nav>

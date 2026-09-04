@@ -34,8 +34,29 @@ CREATE TABLE IF NOT EXISTS `articles` (
     INDEX `idx_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Site Settings Table (for Editorial, titles, etc.)
+-- Site Settings Table (for Editorial, titles, comic texts, about us info, etc.)
 CREATE TABLE IF NOT EXISTS `settings` (
     `setting_key` VARCHAR(100) PRIMARY KEY,
     `setting_value` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Comic Panels Table
+CREATE TABLE IF NOT EXISTS `comic_panels` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `title` VARCHAR(255) NULL,
+    `image_path` VARCHAR(255) NOT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Contributors Table
+CREATE TABLE IF NOT EXISTS `contributors` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(150) NOT NULL,
+    `role` VARCHAR(100) NOT NULL,
+    `batch` VARCHAR(50) NOT NULL,
+    `avatar_path` VARCHAR(255) NULL,
+    `bio` TEXT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

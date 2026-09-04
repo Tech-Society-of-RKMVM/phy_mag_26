@@ -63,10 +63,31 @@ function set_setting($key, $value)
 }
 
 /**
- * Handle image upload for articles - saves directly to assets/images/
+ * Convert YouTube / Vimeo / standard URLs to embeddable player URLs
+ */
+function get_embed_video_url($url)
+{
+    if (empty($url)) return '';
+
+    // YouTube standard watch URL: https://www.youtube.com/watch?v=VIDEO_ID
+    if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i', $url, $matches)) {
+        return 'https://www.youtube.com/embed/' . $matches[1] . '?rel=0';
+    }
+
+    // Vimeo URL: https://vimeo.com/VIDEO_ID
+    if (preg_match('/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)/i', $url, $matches)) {
+        $videoId = end($matches);
+        return 'https://player.vimeo.com/video/' . $videoId;
+    }
+
+    return $url;
+}
+
+/**
+ * Handle image upload for articles, comics, or contributors
  * Returns array with ['success' => bool, 'path' => string, 'error' => string]
  */
-function handle_image_upload($fileInputName)
+function handle_image_upload($fileInputName, $subDir = '')
 {
     if (!isset($_FILES[$fileInputName]) || $_FILES[$fileInputName]['error'] === UPLOAD_ERR_NO_FILE) {
         return ['success' => false, 'path' => '', 'error' => 'No file uploaded'];
@@ -87,13 +108,16 @@ function handle_image_upload($fileInputName)
         return ['success' => false, 'path' => '', 'error' => 'Invalid file format. Allowed: JPG, PNG, WEBP, GIF.'];
     }
 
-    // Target assets/images/ directly
-    $assetsDir = __DIR__ . '/../assets/images/';
-    if (!is_dir($assetsDir)) {
-        mkdir($assetsDir, 0777, true);
+    // Target directory
+    $subDirClean = trim($subDir, '/\\');
+    $relDir = 'assets/images/' . ($subDirClean ? $subDirClean . '/' : '');
+    $targetDir = __DIR__ . '/../' . $relDir;
+    
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
     }
 
-    // Clean original filename or unique name
+    // Clean original filename
     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
     $rawBase = pathinfo($file['name'], PATHINFO_FILENAME);
     $cleanBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', $rawBase);
@@ -102,17 +126,17 @@ function handle_image_upload($fileInputName)
     }
     
     $filename = $cleanBase . '.' . strtolower($ext);
-    $targetPath = $assetsDir . $filename;
+    $targetPath = $targetDir . $filename;
     
     // If file already exists with same name, append timestamp
     if (file_exists($targetPath)) {
         $filename = $cleanBase . '_' . time() . '.' . strtolower($ext);
-        $targetPath = $assetsDir . $filename;
+        $targetPath = $targetDir . $filename;
     }
 
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-        return ['success' => true, 'path' => 'assets/images/' . $filename, 'error' => ''];
+        return ['success' => true, 'path' => $relDir . $filename, 'error' => ''];
     } else {
-        return ['success' => false, 'path' => '', 'error' => 'Failed to save image to assets/images/'];
+        return ['success' => false, 'path' => '', 'error' => 'Failed to save image to ' . $relDir];
     }
 }
