@@ -106,7 +106,7 @@ function seed_initial_database($pdo)
                 'title' => 'GroverGPT',
                 'summary' => 'When AI learns to think like quantum computer...',
                 'author_name' => 'Arka Biswas',
-                'author_batch' => 'UG 3',
+                'author_batch' => 'Passed out 2026',
                 'image_path' => 'assets/images/llm.webp',
                 'published_date' => '2026-08-15',
                 'edition_year' => 2026,
