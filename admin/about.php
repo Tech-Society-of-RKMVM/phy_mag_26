@@ -1,7 +1,7 @@
 <?php
 /**
  * Admin About Us Editor
- * Manage Behind-the-Scenes Video (file upload) and Vision text
+ * Manage Behind-the-Scenes Photos (gallery) and Vision text
  */
 
 require_once __DIR__ . '/../config/auth.php';
@@ -16,86 +16,114 @@ $adminActiveTab = 'about';
 $message = '';
 $error   = '';
 
-// Handle POST
+$pdo = get_db_connection();
+
+// ---------------------------------------------------------------
+// Ensure bts_photos table exists (safety net in case migration
+// hasn't been run yet on this environment)
+// ---------------------------------------------------------------
+$pdo->exec("CREATE TABLE IF NOT EXISTS `bts_photos` (
+  `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `image_path`  VARCHAR(500) NOT NULL,
+  `caption`     VARCHAR(300) NOT NULL DEFAULT '',
+  `sort_order`  SMALLINT     NOT NULL DEFAULT 0,
+  `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+// ---------------------------------------------------------------
+// Handle POST actions
+// ---------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = 'Security token expired. Please reload and try again.';
     } else {
-        $heroTitle    = trim($_POST['about_hero_title'] ?? '');
-        $heroSubtitle = trim($_POST['about_hero_subtitle'] ?? '');
-        $visionText   = trim($_POST['about_vision_text'] ?? '');
-        $btsTitle     = trim($_POST['about_bts_title'] ?? '');
-        $btsDesc      = trim($_POST['about_bts_desc'] ?? '');
+        $action = $_POST['action'] ?? 'save_settings';
 
-        set_setting('about_hero_title',    $heroTitle ?: 'About Our Wall Magazine');
-        set_setting('about_hero_subtitle', $heroSubtitle);
-        set_setting('about_vision_text',   $visionText);
-        set_setting('about_bts_title',     $btsTitle ?: 'Behind The Scenes');
-        set_setting('about_bts_desc',      $btsDesc);
-
-        // Handle video upload
-        if (isset($_FILES['bts_video_file']) && $_FILES['bts_video_file']['error'] !== UPLOAD_ERR_NO_FILE) {
-            $file = $_FILES['bts_video_file'];
-
-            if ($file['error'] !== UPLOAD_ERR_OK) {
-                $error = 'Upload error code: ' . $file['error'];
-            } else {
-                // Validate MIME type
-                $allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime  = finfo_file($finfo, $file['tmp_name']);
-                finfo_close($finfo);
-
-                if (!in_array($mime, $allowedTypes)) {
-                    $error = 'Invalid video format. Please upload MP4, WebM, OGG, or MOV.';
-                } else {
-                    $videoDir = __DIR__ . '/../assets/videos/';
-                    if (!is_dir($videoDir)) {
-                        mkdir($videoDir, 0777, true);
-                    }
-
-                    $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                    $filename = 'bts_video_' . time() . '.' . $ext;
-                    $destPath = $videoDir . $filename;
-
-                    if (move_uploaded_file($file['tmp_name'], $destPath)) {
-                        // Delete old video if there was one
-                        $oldPath = get_setting('about_bts_video_path', '');
-                        if ($oldPath && file_exists(__DIR__ . '/../' . $oldPath)) {
-                            @unlink(__DIR__ . '/../' . $oldPath);
-                        }
-                        set_setting('about_bts_video_path', 'assets/videos/' . $filename);
-                        $message = 'Settings and video saved successfully!';
-                    } else {
-                        $error = 'Failed to save the uploaded video file.';
-                    }
+        // --- Delete a single photo ---
+        if ($action === 'delete_photo') {
+            $photoId = (int)($_POST['photo_id'] ?? 0);
+            if ($photoId > 0) {
+                $stmt = $pdo->prepare("SELECT image_path FROM bts_photos WHERE id = ?");
+                $stmt->execute([$photoId]);
+                $row = $stmt->fetch();
+                if ($row) {
+                    $fullPath = __DIR__ . '/../' . $row['image_path'];
+                    if (file_exists($fullPath)) @unlink($fullPath);
+                    $pdo->prepare("DELETE FROM bts_photos WHERE id = ?")->execute([$photoId]);
+                    $message = 'Photo removed.';
                 }
             }
         }
 
-        // Handle "remove video" action
-        if (isset($_POST['remove_video'])) {
-            $oldPath = get_setting('about_bts_video_path', '');
-            if ($oldPath && file_exists(__DIR__ . '/../' . $oldPath)) {
-                @unlink(__DIR__ . '/../' . $oldPath);
+        // --- Upload new photos ---
+        elseif ($action === 'upload_photos') {
+            $caption = trim($_POST['bts_photo_caption'] ?? '');
+            $files   = $_FILES['bts_photos_upload'] ?? [];
+
+            if (!empty($files['name'][0])) {
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                $photoDir     = __DIR__ . '/../assets/images/bts/';
+                if (!is_dir($photoDir)) mkdir($photoDir, 0777, true);
+
+                $uploaded = 0;
+                $count    = count($files['name']);
+                for ($i = 0; $i < $count; $i++) {
+                    if ($files['error'][$i] !== UPLOAD_ERR_OK) continue;
+
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime  = finfo_file($finfo, $files['tmp_name'][$i]);
+                    finfo_close($finfo);
+
+                    if (!in_array($mime, $allowedTypes)) continue;
+
+                    $ext      = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                    $filename = 'bts_' . time() . '_' . $i . '.' . $ext;
+                    $destPath = $photoDir . $filename;
+
+                    if (move_uploaded_file($files['tmp_name'][$i], $destPath)) {
+                        // Get next sort order
+                        $maxSort = $pdo->query("SELECT MAX(sort_order) FROM bts_photos")->fetchColumn();
+                        $pdo->prepare("INSERT INTO bts_photos (image_path, caption, sort_order) VALUES (?, ?, ?)")
+                            ->execute(['assets/images/bts/' . $filename, $caption, (int)$maxSort + 1]);
+                        $uploaded++;
+                    }
+                }
+                $message = $uploaded > 0 ? "{$uploaded} photo(s) uploaded successfully!" : 'No valid photos were uploaded.';
+            } else {
+                $error = 'Please choose at least one photo file.';
             }
-            set_setting('about_bts_video_path', '');
-            $message = 'Video removed successfully.';
         }
 
-        if (empty($error) && empty($message)) {
+        // --- Save text settings only ---
+        else {
+            $heroTitle    = trim($_POST['about_hero_title'] ?? '');
+            $heroSubtitle = trim($_POST['about_hero_subtitle'] ?? '');
+            $visionText   = trim($_POST['about_vision_text'] ?? '');
+            $btsTitle     = trim($_POST['about_bts_title'] ?? '');
+            $btsDesc      = trim($_POST['about_bts_desc'] ?? '');
+
+            set_setting('about_hero_title',    $heroTitle ?: 'About Our Wall Magazine');
+            set_setting('about_hero_subtitle', $heroSubtitle);
+            set_setting('about_vision_text',   $visionText);
+            set_setting('about_bts_title',     $btsTitle ?: 'Behind The Scenes');
+            set_setting('about_bts_desc',      $btsDesc);
+
             $message = 'Settings saved successfully!';
         }
     }
 }
 
-// Fetch current settings
+// ---------------------------------------------------------------
+// Fetch current values
+// ---------------------------------------------------------------
 $heroTitle    = get_setting('about_hero_title', 'About Our Wall Magazine');
 $heroSubtitle = get_setting('about_hero_subtitle', 'The Department of Physics Wall Magazine at Ramakrishna Mission Vidyamandira is a creative and intellectual platform for undergraduate and postgraduate students.');
 $visionText   = get_setting('about_vision_text', '');
 $btsTitle     = get_setting('about_bts_title', 'Behind The Scenes: Making of the Magazine');
 $btsDesc      = get_setting('about_bts_desc', '');
-$btsVideoPath = get_setting('about_bts_video_path', '');
+
+$btsPhotos = $pdo->query("SELECT * FROM bts_photos ORDER BY sort_order ASC, id ASC")->fetchAll();
 
 require_once __DIR__ . '/includes/admin_header.php';
 ?>
@@ -107,7 +135,7 @@ require_once __DIR__ . '/includes/admin_header.php';
   </div>
   <div class="card-body">
     <p style="color: #64748b; margin-bottom: 0;">
-      Customize the hero text, vision statement, and upload a Behind-the-Scenes video.
+      Customize the hero text, vision statement, and manage Behind-the-Scenes photos.
     </p>
   </div>
 </div>
@@ -119,13 +147,17 @@ require_once __DIR__ . '/includes/admin_header.php';
   <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
 
-<div class="card">
+<!-- ============================================================
+     TEXT SETTINGS CARD
+     ============================================================ -->
+<div class="card" style="margin-bottom: 2rem;">
   <div class="card-header">
-    <h2>🎬 Page Content &amp; Video Settings</h2>
+    <h2>📝 Page Content Settings</h2>
   </div>
   <div class="card-body">
-    <form method="POST" action="about.php" enctype="multipart/form-data">
+    <form method="POST" action="about.php">
       <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+      <input type="hidden" name="action" value="save_settings">
 
       <div class="form-group">
         <label for="about_hero_title">Hero Heading</label>
@@ -145,106 +177,119 @@ require_once __DIR__ . '/includes/admin_header.php';
 
       <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #e2e8f0;">
 
-      <h3 style="font-size: 1rem; margin-bottom: 1.25rem; color: #1e293b;">🎥 Behind The Scenes Video</h3>
-
-      <?php if (!empty($btsVideoPath) && file_exists(__DIR__ . '/../' . $btsVideoPath)): ?>
-        <!-- Current video preview -->
-        <div style="margin-bottom: 1.5rem;">
-          <label style="font-size: 0.85rem; color: #64748b; display: block; margin-bottom: 0.5rem;">
-            Current Video:
-            <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;"><?= e(basename($btsVideoPath)) ?></code>
-          </label>
-          <video controls preload="metadata"
-            style="max-width: 560px; width: 100%; border-radius: 8px; background: #000; display: block;">
-            <source src="../<?= e($btsVideoPath) ?>" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-          <div style="margin-top: 0.75rem;">
-            <button type="submit" name="remove_video" value="1"
-              class="btn btn-sm"
-              style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.3rem 0.9rem; cursor: pointer;"
-              onclick="return confirm('Remove the current video?')">
-              🗑 Remove Video
-            </button>
-          </div>
-        </div>
-      <?php else: ?>
-        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;">No video uploaded yet.</p>
-      <?php endif; ?>
-
       <div class="form-group">
-        <label for="bts_video_file">
-          <?= !empty($btsVideoPath) ? 'Replace Video' : 'Upload Video' ?>
-          <span style="color: #64748b; font-weight: normal;">(MP4, WebM, OGG — max upload size set in php.ini)</span>
-        </label>
-        <input type="file" id="bts_video_file" name="bts_video_file" class="form-control"
-          accept="video/mp4,video/webm,video/ogg,video/quicktime">
-        <small style="color: #64748b; display: block; margin-top: 0.4rem;">
-          The file will be saved to <code>assets/videos/</code>. Large files may take a moment to upload.
-        </small>
-      </div>
-
-      <!-- Upload progress bar (shown while uploading) -->
-      <div id="upload-progress-wrap" style="display: none; margin-bottom: 1rem;">
-        <label style="font-size: 0.85rem; color: #64748b;">Uploading…</label>
-        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
-          <div id="upload-progress-bar"
-            style="height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #6366f1); transition: width 0.3s;"></div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="about_bts_title">Video Section Title</label>
+        <label for="about_bts_title">BTS Section Title</label>
         <input type="text" id="about_bts_title" name="about_bts_title" class="form-control"
           value="<?= e($btsTitle) ?>">
       </div>
 
       <div class="form-group">
-        <label for="about_bts_desc">Video Description</label>
+        <label for="about_bts_desc">BTS Section Description</label>
         <textarea id="about_bts_desc" name="about_bts_desc" class="form-control" rows="2"><?= e($btsDesc) ?></textarea>
       </div>
 
-      <button type="submit" id="btn-save" class="btn btn-primary">
-        💾 Save Settings
-      </button>
+      <button type="submit" class="btn btn-primary">💾 Save Settings</button>
     </form>
   </div>
 </div>
 
+<!-- ============================================================
+     BTS PHOTO GALLERY MANAGER
+     ============================================================ -->
+<div class="card">
+  <div class="card-header">
+    <h2>📸 Behind The Scenes Photos</h2>
+    <span style="font-size: 0.85rem; color: #64748b;"><?= count($btsPhotos) ?> photo(s) uploaded</span>
+  </div>
+  <div class="card-body">
+
+    <!-- Upload form -->
+    <form method="POST" action="about.php" enctype="multipart/form-data"
+          id="bts-upload-form" style="margin-bottom: 2rem;">
+      <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+      <input type="hidden" name="action" value="upload_photos">
+
+      <div class="form-group">
+        <label for="bts_photos_upload">
+          Upload Photos
+          <span style="color: #64748b; font-weight: normal;">(JPG, PNG, WebP — multiple allowed)</span>
+        </label>
+        <input type="file" id="bts_photos_upload" name="bts_photos_upload[]" class="form-control"
+               accept="image/jpeg,image/png,image/webp,image/gif" multiple
+               onchange="previewBtsPhotos(this)">
+      </div>
+
+      <!-- Live preview strip -->
+      <div id="bts-preview-strip"
+           style="display:none; display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;"></div>
+
+      <div class="form-group">
+        <label for="bts_photo_caption">Caption (applied to all uploaded photos in this batch)</label>
+        <input type="text" id="bts_photo_caption" name="bts_photo_caption" class="form-control"
+               placeholder="e.g. Editorial team working on layouts">
+      </div>
+
+      <button type="submit" id="btn-upload" class="btn btn-primary">📤 Upload Photos</button>
+    </form>
+
+    <!-- Existing gallery grid -->
+    <?php if (!empty($btsPhotos)): ?>
+      <hr style="border:0; border-top:1px solid #e2e8f0; margin-bottom:1.5rem;">
+      <h3 style="font-size: 0.95rem; color: #475569; margin-bottom: 1rem;">Existing Photos</h3>
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:1rem;">
+        <?php foreach ($btsPhotos as $photo): ?>
+          <div style="position:relative; border-radius:8px; overflow:hidden; background:#f8fafc;
+                      border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <img src="../<?= e($photo['image_path']) ?>" alt="<?= e($photo['caption']) ?>"
+                 style="width:100%; height:140px; object-fit:cover; display:block;">
+            <?php if ($photo['caption']): ?>
+              <p style="font-size:0.78rem; color:#475569; padding:0.4rem 0.6rem; margin:0;
+                         white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                 title="<?= e($photo['caption']) ?>">
+                <?= e($photo['caption']) ?>
+              </p>
+            <?php endif; ?>
+            <!-- Delete button -->
+            <form method="POST" action="about.php" style="position:absolute; top:5px; right:5px;">
+              <input type="hidden" name="csrf_token" value="<?= get_csrf_token() ?>">
+              <input type="hidden" name="action" value="delete_photo">
+              <input type="hidden" name="photo_id" value="<?= (int)$photo['id'] ?>">
+              <button type="submit"
+                      style="background:rgba(220,38,38,0.85); color:#fff; border:none; border-radius:50%;
+                             width:26px; height:26px; font-size:0.75rem; cursor:pointer; line-height:1;"
+                      onclick="return confirm('Delete this photo?')" title="Delete">✕</button>
+            </form>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <p style="color:#94a3b8; text-align:center; padding:2rem 0;">
+        No BTS photos yet. Upload some above!
+      </p>
+    <?php endif; ?>
+
+  </div>
+</div>
+
 <script>
-(function () {
-    const fileInput = document.getElementById('bts_video_file');
-    const form      = fileInput ? fileInput.closest('form') : null;
-    const progressWrap = document.getElementById('upload-progress-wrap');
-    const progressBar  = document.getElementById('upload-progress-bar');
-    const saveBtn      = document.getElementById('btn-save');
+function previewBtsPhotos(input) {
+    const strip = document.getElementById('bts-preview-strip');
+    strip.innerHTML = '';
+    strip.style.display = 'none';
+    if (!input.files || !input.files.length) return;
 
-    if (!form || !fileInput) return;
-
-    // Show file size warning
-    fileInput.addEventListener('change', function () {
-        const file = this.files[0];
-        if (!file) return;
-        const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-        if (file.size > 500 * 1024 * 1024) {
-            alert('Warning: This file is ' + sizeMB + ' MB. Make sure your PHP upload_max_filesize allows it.');
-        }
+    strip.style.display = 'flex';
+    Array.from(input.files).forEach(function (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'height:90px; width:auto; border-radius:6px; object-fit:cover; border:2px solid #e2e8f0;';
+            strip.appendChild(img);
+        };
+        reader.readAsDataURL(file);
     });
-
-    // Show animated progress bar on submit (if a file is chosen)
-    form.addEventListener('submit', function (e) {
-        if (!fileInput.files || !fileInput.files.length) return; // no file, normal submit
-        if (progressWrap) progressWrap.style.display = 'block';
-        if (saveBtn) saveBtn.disabled = true;
-
-        // Animate bar indeterminately until page reloads
-        let pct = 0;
-        const interval = setInterval(function () {
-            pct = Math.min(pct + Math.random() * 8, 92);
-            if (progressBar) progressBar.style.width = pct + '%';
-        }, 400);
-    });
-})();
+}
 </script>
 
 <?php require_once __DIR__ . '/includes/admin_footer.php'; ?>
